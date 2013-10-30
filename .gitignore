@@ -1,0 +1,32 @@
+# Binaries
+*.elf
+*.srec
+
+# object files
+*.o
+
+# altera monitor program project files
+*.ncf
+nios_macros.s
+
+
+# Additional files used for programs with Device Driver Support
+BSP/
+Makefile
+*.map
+obj/
+*.objdump
+
+# Junk files produced by quartus.
+*.q[sp]f
+*.qws
+incremental_db/
+db/
+output_files/
+simulation/
+
+
+# Other Junk
+*.swp
+*.bak
+*.temp
