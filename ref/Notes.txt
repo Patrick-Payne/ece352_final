@@ -1,0 +1,3 @@
+To change the *.mif file that is used to initialize the instruction memory in Quartus, open either DataMemory.v (for the original RAM) or DualMem.v (for the Dualport RAM) and look for the line that contains
+altsyncram_component.init_file = ...
+For the first two weeks, please submit the verilog files that you changed (not the whole project) as prep. This won't be graded, it just helps the TAs to find possible problems you have with the code.
