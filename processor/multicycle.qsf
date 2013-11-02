@@ -28,7 +28,7 @@ set_global_assignment -name DEVICE EP2C35F672C6
 set_global_assignment -name TOP_LEVEL_ENTITY multicycle
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION "6.0 SP1"
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "10:42:43  MAY 22, 2007"
-set_global_assignment -name LAST_QUARTUS_VERSION "11.1 SP2"
+set_global_assignment -name LAST_QUARTUS_VERSION "13.0 SP1"
 set_location_assignment PIN_N25 -to SW[0]
 set_location_assignment PIN_N26 -to SW[1]
 set_location_assignment PIN_P25 -to SW[2]
@@ -138,7 +138,6 @@ set_global_assignment -name VERILOG_FILE register_8bit.v
 set_global_assignment -name VERILOG_FILE mux2to1_8bit.v
 set_global_assignment -name VERILOG_FILE mux2to1_2bit.v
 set_global_assignment -name VERILOG_FILE mux5to1_8bit.v
-set_global_assignment -name VERILOG_FILE DualMem.v
 set_global_assignment -name VERILOG_FILE multicycle.v
 set_global_assignment -name VERILOG_FILE DataMemory.v
 set_global_assignment -name VERILOG_FILE ALU.v
@@ -147,3 +146,7 @@ set_global_assignment -name VERILOG_FILE extend.v
 set_global_assignment -name VERILOG_FILE HEX.v
 set_global_assignment -name VERILOG_FILE FSM.v
 set_global_assignment -name BDF_FILE memory.bdf
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
