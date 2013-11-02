@@ -14,6 +14,7 @@ Change R.Willenberg - Oct 2012: Also produces a *.mem file for ModelSim simulati
 #include <string>
 #include <cstdlib>
 #include <map>
+#include <cstring>
 #include <cstdio>
 #include <vector>
 
@@ -233,7 +234,7 @@ int main(int argc, char* argv[])
 		if (line.length() > 0 && line[line.length()-1] == '\r')
 			line.resize(line.length() - 1);
 		string col1, col2, col3;
-		unsigned int b, e;
+		size_t b, e;
 
 		line_count++;
 
