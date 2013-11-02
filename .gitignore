@@ -12,8 +12,14 @@ db/
 output_files/
 simulation/
 
+# assembler stuff.
+asm
+*.mif
+*.mem
+
 
 # Other Junk
 *.swp
 *.bak
 *.temp
+*~
