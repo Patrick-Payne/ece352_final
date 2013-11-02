@@ -11,6 +11,9 @@ incremental_db/
 db/
 output_files/
 simulation/
+*.rpt
+*.done
+*.summary
 
 # assembler stuff.
 asm
