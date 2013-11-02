@@ -18,7 +18,6 @@ obj/
 *.objdump
 
 # Junk files produced by quartus.
-*.q[sp]f
 *.qws
 incremental_db/
 db/
