@@ -12,7 +12,7 @@ module FSM (
     input reset, clock, N, Z,
     input [3:0] instr,
     //output [3:0] state,
-    output reg PCwrite, MemRead, MemWrite, IRload, R1Sel, MDRload,
+    output reg PCwrite, MemRead, MemWrite, IRload, R1Sel, MDRload, Stop,
     output reg R1R2Load, ALU1, ALUOutWrite, RFWrite, RegIn, FlagWrite,
     output reg [2:0] ALU2, ALUop);
 
@@ -22,7 +22,7 @@ module FSM (
   /* state constants (note: asn = add/sub/nand, asnsh = add/sub/nand/shift) */
   parameter [3:0] reset_s = 0, c1 = 1, c2 = 2, c3_asn = 3, c4_asnsh = 4,
      c3_shift = 5, c3_ori = 6, c4_ori = 7, c5_ori = 8, c3_load = 9,
-     c4_load = 10, c3_store = 11, c3_bpz = 12, c3_bz = 13, c3_bnz = 14;
+     c4_load = 10, c3_store = 11, c3_bpz = 12, c3_bz = 13, c3_bnz = 14, c3_stop = 15;
   
   parameter [2:0] i_shift = 3, i_ori = 7;
   
@@ -50,6 +50,7 @@ module FSM (
           else if(instr == i_bz) state = c3_bz;
           else if(instr == i_bnz) state = c3_bnz;
 			 else if(instr == i_nop) state = c1;
+			 else if(instr == i_stop) state = c3_stop;
           else state = 0;
         end
         c3_asn: state = c4_asnsh; // cycle 3: ADD SUB NAND
@@ -64,6 +65,7 @@ module FSM (
         c3_bpz: state = c1; // cycle 3: BPZ
         c3_bz: state = c1; // cycle 3: BZ
         c3_bnz: state = c1; // cycle 3: BNZ
+		  c3_stop: state = c3_stop; // cycle 3: STOP
       endcase
     end
   end
@@ -86,6 +88,7 @@ module FSM (
         RFWrite = 0;
         RegIn = 0;
         FlagWrite = 0;
+		  Stop = 0;
       end     
       c1: begin  //control = 19'b1110100000010000000;
         PCwrite = 1;
@@ -102,6 +105,7 @@ module FSM (
         RFWrite = 0;
         RegIn = 0;
         FlagWrite = 0;
+		  Stop = 0;
       end 
       c2: begin //control = 19'b0000000100000000000;
         PCwrite = 0;
@@ -118,6 +122,7 @@ module FSM (
         RFWrite = 0;
         RegIn = 0;
         FlagWrite = 0;
+		  Stop = 0;
       end
       c3_asn:  begin
         if (instr == i_add) begin // add, control = 19'b0000000010000001001;
@@ -135,6 +140,7 @@ module FSM (
           RFWrite = 0;
           RegIn = 0;
           FlagWrite = 1;
+			 Stop = 0;
         end 
         else if (instr == i_subtract) begin //sub, ctl = 19'b0000000010000011001;
           PCwrite = 0;
@@ -151,6 +157,7 @@ module FSM (
           RFWrite = 0;
           RegIn = 0;
           FlagWrite = 1;
+			 Stop = 0;
         end
         else begin // nand, control = 19'b0000000010000111001;
           PCwrite = 0;
@@ -167,6 +174,7 @@ module FSM (
           RFWrite = 0;
           RegIn = 0;
           FlagWrite = 1;
+			 Stop = 0;
         end
       end
       c4_asnsh: begin //control = 19'b0000000000000000100;
@@ -184,6 +192,7 @@ module FSM (
         RFWrite = 1;
         RegIn = 0;
         FlagWrite = 0;
+		  Stop = 0;
       end
       c3_shift: begin //control = 19'b0000000011001001001;
         PCwrite = 0;
@@ -200,6 +209,7 @@ module FSM (
         RFWrite = 0;
         RegIn = 0;
         FlagWrite = 1;
+		  Stop = 0;
       end
       c3_ori: begin //control = 19'b0000010100000000000;
         PCwrite = 0;
@@ -216,6 +226,7 @@ module FSM (
         RFWrite = 0;
         RegIn = 0;
         FlagWrite = 0;
+		  Stop = 0;
       end
       c4_ori: begin //control = 19'b0000000010110101001;
         PCwrite = 0;
@@ -232,6 +243,7 @@ module FSM (
         RFWrite = 0;
         RegIn = 0;
         FlagWrite = 1;
+		  Stop = 0;
       end
       c5_ori: begin //control = 19'b0000010000000000100;
         PCwrite = 0;
@@ -248,6 +260,7 @@ module FSM (
         RFWrite = 1;
         RegIn = 0;
         FlagWrite = 0;
+		  Stop = 0;
       end
       c3_load: begin //control = 19'b0010001000000000000;
         PCwrite = 0;
@@ -264,6 +277,7 @@ module FSM (
         RFWrite = 0;
         RegIn = 0;
         FlagWrite = 0;
+		  Stop = 0;
       end
       c4_load: begin //control = 19'b0000000000000001110;
         PCwrite = 0;
@@ -280,6 +294,7 @@ module FSM (
         RFWrite = 1;
         RegIn = 1;
         FlagWrite = 0;
+		  Stop = 0;
       end
       c3_store: begin //control = 19'b0001000000000000000;
         PCwrite = 0;
@@ -296,6 +311,7 @@ module FSM (
         RFWrite = 0;
         RegIn = 0;
         FlagWrite = 0;
+		  Stop = 0;
       end
       c3_bpz: begin //control = {~N,18'b000000000100000000};
         PCwrite = ~N;
@@ -312,6 +328,7 @@ module FSM (
         RFWrite = 0;
         RegIn = 0;
         FlagWrite = 0;
+		  Stop = 0;
       end
       c3_bz: begin //control = {Z,18'b000000000100000000};
         PCwrite = Z;
@@ -328,6 +345,7 @@ module FSM (
         RFWrite = 0;
         RegIn = 0;
         FlagWrite = 0;
+		  Stop = 0;
       end
       c3_bnz: begin //control = {~Z,18'b000000000100000000};
         PCwrite = ~Z;
@@ -344,6 +362,24 @@ module FSM (
         RFWrite = 0;
         RegIn = 0;
         FlagWrite = 0;
+		  Stop = 0;
+      end
+		c3_stop: begin //control = 19'b0000000000000000001;
+        PCwrite = 0;
+        MemRead = 0;
+        MemWrite = 0;
+        IRload = 0;
+        R1Sel = 0;
+        MDRload = 0;
+        R1R2Load = 0;
+        ALU1 = 0;
+        ALU2 = 3'b000;
+        ALUop = 3'b000;
+        ALUOutWrite = 0;
+        RFWrite = 0;
+        RegIn = 0;
+        FlagWrite = 0;
+		  Stop = 1;
       end
       default: begin //control = 19'b0000000000000000000;
         PCwrite = 0;
@@ -360,6 +396,7 @@ module FSM (
         RFWrite = 0;
         RegIn = 0;
         FlagWrite = 0;
+		  Stop = 0;
       end
     endcase
   end

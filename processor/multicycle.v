@@ -16,7 +16,7 @@ module multicycle(
 
   /* Internal registers/wires. */
   wire clock, reset;
-  wire IRLoad, MDRLoad, MemRead, MemWrite, PCWrite, RegIn;
+  wire IRLoad, MDRLoad, MemRead, MemWrite, PCWrite, RegIn, Stop;
   wire ALU1, ALUOutWrite, FlagWrite, R1R2Load, R1Sel, RFWrite;
   wire [7:0] R2wire, PCwire, R1wire, RFout1wire, RFout2wire;
   wire [7:0] ALU1wire, ALU2wire, ALUwire, ALUOut, MDRwire, MEMwire;
@@ -35,7 +35,7 @@ module multicycle(
   FSM  Control(
      .reset(reset), .clock(clock), .N(N), .Z(Z), .instr(IR_out[3:0]),
      .PCwrite(PCWrite), .MemRead(MemRead),
-     .MemWrite(MemWrite), .IRload(IRLoad), .R1Sel(R1Sel), .MDRload(MDRLoad),
+     .MemWrite(MemWrite), .IRload(IRLoad), .R1Sel(R1Sel), .MDRload(MDRLoad), .Stop(Stop),
      .R1R2Load(R1R2Load), .ALU1(ALU1), .ALUOutWrite(ALUOutWrite),
      .RFWrite(RFWrite), .RegIn(RegIn), .FlagWrite(FlagWrite), .ALU2(ALU2),
      .ALUop(ALUOp));
@@ -125,7 +125,7 @@ module multicycle(
 
   /* LED Indicators */
   assign LEDR[17] = PCWrite;
-  assign LEDR[16] = constant[0:0];
+  assign LEDR[16] = Stop;
   assign LEDR[15] = MemRead;
   assign LEDR[14] = MemWrite;
   assign LEDR[13] = IRLoad;
