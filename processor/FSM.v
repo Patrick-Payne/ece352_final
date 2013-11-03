@@ -23,6 +23,11 @@ module FSM (
   parameter [3:0] reset_s = 0, c1 = 1, c2 = 2, c3_asn = 3, c4_asnsh = 4,
      c3_shift = 5, c3_ori = 6, c4_ori = 7, c5_ori = 8, c3_load = 9,
      c4_load = 10, c3_store = 11, c3_bpz = 12, c3_bz = 13, c3_bnz = 14;
+  
+  parameter [2:0] i_shift = 3, i_ori = 7;
+  
+  parameter [3:0] i_add = 4, i_subtract = 6, i_nand = 8, i_load = 0,
+	  i_store = 2, i_bpz = 13, i_bz = 5, i_bnz = 9, i_nop = 10, i_stop = 1;
 
   /* determines the next state based upon the current state; supports
    * asynchronous reset.
@@ -35,15 +40,16 @@ module FSM (
         reset_s: state = c1; // reset state
         c1: state = c2; // cycle 1
         c2: begin // cycle 2
-          if(instr == 4'b0100 | instr == 4'b0110 | instr == 4'b1000)
+          if(instr == i_add | instr == i_subtract | instr == i_nand)
             state = c3_asn;
-          else if(instr[2:0] == 3'b011) state = c3_shift;
-          else if(instr[2:0] == 3'b111) state = c3_ori;
-          else if(instr == 4'b0000) state = c3_load;
-          else if(instr == 4'b0010) state = c3_store;
-          else if(instr == 4'b1101) state = c3_bpz;
-          else if(instr == 4'b0101) state = c3_bz;
-          else if(instr == 4'b1001) state = c3_bnz;
+          else if(instr[2:0] == i_shift) state = c3_shift;
+          else if(instr[2:0] == i_ori) state = c3_ori;
+          else if(instr == i_load) state = c3_load;
+          else if(instr == i_store) state = c3_store;
+          else if(instr == i_bpz) state = c3_bpz;
+          else if(instr == i_bz) state = c3_bz;
+          else if(instr == i_bnz) state = c3_bnz;
+			 else if(instr == i_nop) state = c1;
           else state = 0;
         end
         c3_asn: state = c4_asnsh; // cycle 3: ADD SUB NAND
@@ -114,7 +120,7 @@ module FSM (
         FlagWrite = 0;
       end
       c3_asn:  begin
-        if (instr == 4'b0100) begin // add, control = 19'b0000000010000001001;
+        if (instr == i_add) begin // add, control = 19'b0000000010000001001;
           PCwrite = 0;
           MemRead = 0;
           MemWrite = 0;
@@ -130,7 +136,7 @@ module FSM (
           RegIn = 0;
           FlagWrite = 1;
         end 
-        else if (instr == 4'b0110) begin //sub, ctl = 19'b0000000010000011001;
+        else if (instr == i_subtract) begin //sub, ctl = 19'b0000000010000011001;
           PCwrite = 0;
           MemRead = 0;
           MemWrite = 0;
