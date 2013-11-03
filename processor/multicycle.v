@@ -17,7 +17,7 @@ module multicycle(
 
   /* Internal registers/wires. */
   wire clock, reset;
-  wire IRLoad, MDRLoad, MemRead, MemWrite, PCWrite, RegIn;
+  wire IRLoad, MDRLoad, MemRead, MemWrite, PCWrite, RegIn, stop;
   wire ALU1, ALUOutWrite, FlagWrite, R1R2Load, R1Sel, RFWrite;
   wire [7:0] R2wire, PCwire, R1wire, RFout1wire, RFout2wire;
   wire [7:0] ALU1wire, ALU2wire, ALUwire, ALUOut, MDRwire, MEMwire;
@@ -25,7 +25,7 @@ module multicycle(
   wire [7:0] reg0, reg1, reg2, reg3;
   wire [7:0] HEX10_wire, HEX32_wire, HEX54_wire, HEX76_wire;
   wire [7:0] constant;
-  wire [15:0] performance_count;
+  reg [15:0] performance_count;
   wire [2:0] ALUOp, ALU2;
   wire [1:0] R1_in;
   wire Nwire, Zwire;
@@ -106,7 +106,7 @@ module multicycle(
   defparam ZE3.n = 3;
   defparam ZE5.n = 5;
 
-  always @(posedge clock or posedge reset) begin
+  always @(posedge clock, posedge reset) begin
     if (reset) begin
       N <= 0;
       Z <= 0;
@@ -119,11 +119,20 @@ module multicycle(
 
   /* Create a dummy constant 1, used in the datapath. */
   assign constant = 1;
+  assign stop = 0;
 
-  /* Create a dummy value for the performance counter for now. */
-  assign performance_count = 16'hABCD;
+  /* Update the performance counter if the stop condition is not raised. */
+  always @(posedge clock, posedge reset) begin
+    if (reset) begin
+      performance_count <= 0;
+    end
+    else if (!stop) begin
+      performance_count <= performance_count + 16'b1;
+    end
+  end
 
   /* Select the values to display on the hex displays. */
+  // If switch 2 is on, display the performance counter on HEX1 and HEX0.
   mux2to1_8bit HEX10_mux(
      .data0x(reg3), .data1x(performance_count[7:0]),
      .sel(SW[2]), .result(HEX10_wire));
@@ -132,9 +141,18 @@ module multicycle(
      .data0x(reg2), .data1x(performance_count[15:8]),
      .sel(SW[2]), .result(HEX32_wire));
 
+  // If switch 0 is on, display the contents of the PC and IR.
+  mux2to1_8bit HEX54_mux(
+     .data0x(reg1), .data1x(IR_out),
+     .sel(SW[0]), .result(HEX54_wire));
+
+  mux2to1_8bit HEX76_mux(
+     .data0x(reg0), .data1x(PCwire),
+     .sel(SW[0]), .result(HEX76_wire));
+
   /* Output */
   HEXs HEX_display(
-     .in0(reg0), .in1(reg1), .in2(HEX32_wire), .in3(HEX10_wire),
+     .in0(HEX76_wire), .in1(HEX54_wire), .in2(HEX32_wire), .in3(HEX10_wire),
      .out0(HEX0), .out1(HEX1), .out2(HEX2), .out3(HEX3),
      .out4(HEX4), .out5(HEX5), .out6(HEX6), .out7(HEX7));
 
