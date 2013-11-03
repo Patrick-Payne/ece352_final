@@ -9,7 +9,8 @@
  *****************************************************************************/
 
 module multicycle(
-    input [1:0] KEY, SW,
+    input [1:0] KEY,
+    input [2:0] SW,
     output [6:0] HEX0, HEX1, HEX2, HEX3, HEX4, HEX5, HEX6, HEX7,
     output [7:0] LEDG,
     output [17:0] LEDR);
@@ -22,7 +23,9 @@ module multicycle(
   wire [7:0] ALU1wire, ALU2wire, ALUwire, ALUOut, MDRwire, MEMwire;
   wire [7:0] IR_in, IR_out, SE4wire, ZE5wire, ZE3wire, RegWire;
   wire [7:0] reg0, reg1, reg2, reg3;
+  wire [7:0] HEX10_wire, HEX32_wire, HEX54_wire, HEX76_wire;
   wire [7:0] constant;
+  wire [15:0] performance_count;
   wire [2:0] ALUOp, ALU2;
   wire [1:0] R1_in;
   wire Nwire, Zwire;
@@ -117,9 +120,21 @@ module multicycle(
   /* Create a dummy constant 1, used in the datapath. */
   assign constant = 1;
 
+  /* Create a dummy value for the performance counter for now. */
+  assign performance_count = 16'hABCD;
+
+  /* Select the values to display on the hex displays. */
+  mux2to1_8bit HEX10_mux(
+     .data0x(reg3), .data1x(performance_count[7:0]),
+     .sel(SW[2]), .result(HEX10_wire));
+
+  mux2to1_8bit HEX32_mux(
+     .data0x(reg2), .data1x(performance_count[15:8]),
+     .sel(SW[2]), .result(HEX32_wire));
+
   /* Output */
   HEXs HEX_display(
-     .in0(reg0), .in1(reg1), .in2(reg2), .in3(reg3),
+     .in0(reg0), .in1(reg1), .in2(HEX32_wire), .in3(HEX10_wire),
      .out0(HEX0), .out1(HEX1), .out2(HEX2), .out3(HEX3),
      .out4(HEX4), .out5(HEX5), .out6(HEX6), .out7(HEX7));
 
