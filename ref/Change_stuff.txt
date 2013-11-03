@@ -1,0 +1,1 @@
+1. Change c5_ori value of ALUOutWrite to 0.
