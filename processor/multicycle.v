@@ -17,9 +17,10 @@ module multicycle(
 
   /* Internal registers/wires. */
   wire clock, reset;
-  wire IRLoad, MDRLoad, MemRead, MemWrite, PCWrite, RegIn, Stop;
+  wire IRLoad, MDRLoad, MemRead, MemWrite, PC_sel, PCWrite, RegIn, Stop;
   wire ALU1, ALUOutWrite, FlagWrite, R1R2Load, R1Sel, RFWrite;
-  wire [7:0] R2wire, PCwire, R1wire, RFout1wire, RFout2wire;
+  wire [7:0] R2wire, R1wire, RFout1wire, RFout2wire;
+  wire [7:0] PC_in, PCwire;
   wire [7:0] ALU1wire, ALU2wire, ALUwire, ALUOut, MDRwire, MEMwire;
   wire [7:0] IR_in, IR_out, SE4wire, ZE5wire, ZE3wire, RegWire;
   wire [7:0] reg0, reg1, reg2, reg3;
@@ -37,9 +38,9 @@ module multicycle(
 
   FSM  Control(
      .reset(reset), .clock(clock), .N(N), .Z(Z), .instr(IR_out[3:0]),
-     .PCwrite(PCWrite), .MemRead(MemRead),
-     .MemWrite(MemWrite), .IRload(IRLoad), .R1Sel(R1Sel), .MDRload(MDRLoad), .Stop(Stop),
-     .R1R2Load(R1R2Load), .ALU1(ALU1), .ALUOutWrite(ALUOutWrite),
+     .PC_sel(PC_sel), .PCwrite(PCWrite), .MemRead(MemRead),
+     .MemWrite(MemWrite), .IRload(IRLoad), .R1Sel(R1Sel), .MDRload(MDRLoad),
+     .Stop(Stop), .R1R2Load(R1R2Load), .ALU1(ALU1), .ALUOutWrite(ALUOutWrite),
      .RFWrite(RFWrite), .RegIn(RegIn), .FlagWrite(FlagWrite), .ALU2(ALU2),
      .ALUop(ALUOp));
 
@@ -67,7 +68,7 @@ module multicycle(
 
   register_8bit PC(
      .clock(clock), .aclr(reset), .enable(PCWrite),
-     .data(ALUwire), .q(PCwire));
+     .data(PC_in), .q(PCwire));
 
   register_8bit R1(
      .clock(clock), .aclr(reset), .enable(R1R2Load),
@@ -80,6 +81,11 @@ module multicycle(
   register_8bit ALUOut_reg(
      .clock(clock), .aclr(reset), .enable(ALUOutWrite),
      .data(ALUwire), .q(ALUOut));
+
+  /* Muxes. */
+  mux2to1_8bit PCsel_mux(
+     .data0x(PCwire + 8'b1), .data1x(ALUwire),
+     .sel(PC_sel), .result(PC_in));
 
   mux2to1_2bit R1Sel_mux(
      .data0x(IR_out[7:6]), .data1x(constant[1:0]),

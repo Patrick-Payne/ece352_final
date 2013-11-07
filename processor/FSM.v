@@ -12,8 +12,8 @@ module FSM (
     input reset, clock, N, Z,
     input [3:0] instr,
     //output [3:0] state,
-    output reg PCwrite, MemRead, MemWrite, IRload, R1Sel, MDRload, Stop,
-    output reg R1R2Load, ALU1, ALUOutWrite, RFWrite, RegIn, FlagWrite,
+    output reg PCwrite, PC_sel, MemRead, MemWrite, IRload, R1Sel, MDRload, 
+    output reg R1R2Load, ALU1, ALUOutWrite, RFWrite, RegIn, FlagWrite, Stop,
     output reg [2:0] ALU2, ALUop);
 
   /* The 4 bit number representing the state of the control. */
@@ -74,6 +74,7 @@ module FSM (
   always @(*) begin
     case (state)
       reset_s: begin //control = 19'b0000000000000000000;
+        PC_sel = 0;
         PCwrite = 0;
         MemRead = 0;
         MemWrite = 0;
@@ -91,6 +92,7 @@ module FSM (
 		  Stop = 0;
       end     
       c1: begin  //control = 19'b1110100000010000000;
+        PC_sel = 0;
         PCwrite = 1;
         MemRead = 1;
         MemWrite = 0;
@@ -108,6 +110,7 @@ module FSM (
 		  Stop = 0;
       end 
       c2: begin //control = 19'b0000000100000000000;
+        PC_sel = 0;
         PCwrite = 0;
         MemRead = 0;
         MemWrite = 0;
@@ -126,6 +129,7 @@ module FSM (
       end
       c3_asn:  begin
         if (instr == i_add) begin // add, control = 19'b0000000010000001001;
+          PC_sel = 0;
           PCwrite = 0;
           MemRead = 0;
           MemWrite = 0;
@@ -143,6 +147,7 @@ module FSM (
 			 Stop = 0;
         end 
         else if (instr == i_subtract) begin //sub, ctl = 19'b0000000010000011001;
+          PC_sel = 0;
           PCwrite = 0;
           MemRead = 0;
           MemWrite = 0;
@@ -160,6 +165,7 @@ module FSM (
 			 Stop = 0;
         end
         else begin // nand, control = 19'b0000000010000111001;
+          PC_sel = 0;
           PCwrite = 0;
           MemRead = 0;
           MemWrite = 0;
@@ -178,6 +184,7 @@ module FSM (
         end
       end
       c4_asnsh: begin //control = 19'b0000000000000000100;
+        PC_sel = 0;
         PCwrite = 0;
         MemRead = 0;
         MemWrite = 0;
@@ -195,6 +202,7 @@ module FSM (
 		  Stop = 0;
       end
       c3_shift: begin //control = 19'b0000000011001001001;
+        PC_sel = 0;
         PCwrite = 0;
         MemRead = 0;
         MemWrite = 0;
@@ -212,6 +220,7 @@ module FSM (
 		  Stop = 0;
       end
       c3_ori: begin //control = 19'b0000010100000000000;
+        PC_sel = 0;
         PCwrite = 0;
         MemRead = 0;
         MemWrite = 0;
@@ -229,6 +238,7 @@ module FSM (
 		  Stop = 0;
       end
       c4_ori: begin //control = 19'b0000000010110101001;
+        PC_sel = 0;
         PCwrite = 0;
         MemRead = 0;
         MemWrite = 0;
@@ -246,6 +256,7 @@ module FSM (
 		  Stop = 0;
       end
       c5_ori: begin //control = 19'b0000010000000000100;
+        PC_sel = 0;
         PCwrite = 0;
         MemRead = 0;
         MemWrite = 0;
@@ -263,6 +274,7 @@ module FSM (
 		  Stop = 0;
       end
       c3_load: begin //control = 19'b0010001000000000000;
+        PC_sel = 0;
         PCwrite = 0;
         MemRead = 1;
         MemWrite = 0;
@@ -280,6 +292,7 @@ module FSM (
 		  Stop = 0;
       end
       c4_load: begin //control = 19'b0000000000000001110;
+        PC_sel = 0;
         PCwrite = 0;
         MemRead = 0;
         MemWrite = 0;
@@ -297,6 +310,7 @@ module FSM (
 		  Stop = 0;
       end
       c3_store: begin //control = 19'b0001000000000000000;
+        PC_sel = 0;
         PCwrite = 0;
         MemRead = 0;
         MemWrite = 1;
@@ -314,6 +328,7 @@ module FSM (
 		  Stop = 0;
       end
       c3_bpz: begin //control = {~N,18'b000000000100000000};
+        PC_sel = 1;
         PCwrite = ~N;
         MemRead = 0;
         MemWrite = 0;
@@ -331,6 +346,7 @@ module FSM (
 		  Stop = 0;
       end
       c3_bz: begin //control = {Z,18'b000000000100000000};
+        PC_sel = 1;
         PCwrite = Z;
         MemRead = 0;
         MemWrite = 0;
@@ -348,6 +364,7 @@ module FSM (
 		  Stop = 0;
       end
       c3_bnz: begin //control = {~Z,18'b000000000100000000};
+        PC_sel = 1;
         PCwrite = ~Z;
         MemRead = 0;
         MemWrite = 0;
@@ -365,6 +382,7 @@ module FSM (
 		  Stop = 0;
       end
 		c3_stop: begin //control = 19'b0000000000000000001;
+        PC_sel = 0;
         PCwrite = 0;
         MemRead = 0;
         MemWrite = 0;
@@ -382,6 +400,7 @@ module FSM (
 		  Stop = 1;
       end
       default: begin //control = 19'b0000000000000000000;
+        PC_sel = 0;
         PCwrite = 0;
         MemRead = 0;
         MemWrite = 0;
