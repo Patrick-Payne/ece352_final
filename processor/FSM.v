@@ -24,10 +24,14 @@ module FSM (
      c3_shift = 5, c3_ori = 6, c4_ori = 7, c5_ori = 8, c3_load = 9,
      c4_load = 10, c3_store = 11, c3_bpz = 12, c3_bz = 13, c3_bnz = 14, c3_stop = 15;
   
+  /* Define constants for the different possible opcodes. */
   parameter [2:0] i_shift = 3, i_ori = 7;
-  
   parameter [3:0] i_add = 4, i_subtract = 6, i_nand = 8, i_load = 0,
 	  i_store = 2, i_bpz = 13, i_bz = 5, i_bnz = 9, i_nop = 10, i_stop = 1;
+
+  /* Define constants for different ALU operation modes. */
+  parameter [2:0] ALUop_add = 3'b000, ALUop_sub = 3'b001, ALUop_or = 3'b010,
+      ALUop_nand = 3'b011, ALUop_shift = 3'b100;
 
   /* determines the next state based upon the current state; supports
    * asynchronous reset.
@@ -84,7 +88,7 @@ module FSM (
         R1R2Load = 0;
         ALU1 = 0;
         ALU2 = 3'b000;
-        ALUop = 3'b000;
+        ALUop = ALUop_add;
         ALUOutWrite = 0;
         RFWrite = 0;
         RegIn = 0;
@@ -102,7 +106,7 @@ module FSM (
         R1R2Load = 0;
         ALU1 = 0;
         ALU2 = 3'b001;
-        ALUop = 3'b000;
+        ALUop = ALUop_add;
         ALUOutWrite = 0;
         RFWrite = 0;
         RegIn = 0;
@@ -120,7 +124,7 @@ module FSM (
         R1R2Load = 1;
         ALU1 = 0;
         ALU2 = 3'b000;
-        ALUop = 3'b000;
+        ALUop = ALUop_add;
         ALUOutWrite = 0;
         RFWrite = 0;
         RegIn = 0;
@@ -139,7 +143,7 @@ module FSM (
           R1R2Load = 0;
           ALU1 = 1;
           ALU2 = 3'b000;
-          ALUop = 3'b000;
+          ALUop = ALUop_add;
           ALUOutWrite = 1;
           RFWrite = 0;
           RegIn = 0;
@@ -157,7 +161,7 @@ module FSM (
           R1R2Load = 0;
           ALU1 = 1;
           ALU2 = 3'b000;
-          ALUop = 3'b001;
+          ALUop = ALUop_sub;
           ALUOutWrite = 1;
           RFWrite = 0;
           RegIn = 0;
@@ -175,31 +179,13 @@ module FSM (
           R1R2Load = 0;
           ALU1 = 1;
           ALU2 = 3'b000;
-          ALUop = 3'b011;
+          ALUop = ALUop_nand;
           ALUOutWrite = 1;
           RFWrite = 0;
           RegIn = 0;
           FlagWrite = 1;
 			 Stop = 0;
         end
-      end
-      c4_asnsh: begin //control = 19'b0000000000000000100;
-        PC_sel = 0;
-        PCwrite = 0;
-        MemRead = 0;
-        MemWrite = 0;
-        IRload = 0;
-        R1Sel = 0;
-        MDRload = 0;
-        R1R2Load = 0;
-        ALU1 = 0;
-        ALU2 = 3'b000;
-        ALUop = 3'b000;
-        ALUOutWrite = 0;
-        RFWrite = 1;
-        RegIn = 0;
-        FlagWrite = 0;
-		  Stop = 0;
       end
       c3_shift: begin //control = 19'b0000000011001001001;
         PC_sel = 0;
@@ -212,11 +198,29 @@ module FSM (
         R1R2Load = 0;
         ALU1 = 1;
         ALU2 = 3'b100;
-        ALUop = 3'b100;
+        ALUop = ALUop_shift;
         ALUOutWrite = 1;
         RFWrite = 0;
         RegIn = 0;
         FlagWrite = 1;
+		  Stop = 0;
+      end
+      c4_asnsh: begin //control = 19'b0000000000000000100;
+        PC_sel = 0;
+        PCwrite = 0;
+        MemRead = 0;
+        MemWrite = 0;
+        IRload = 0;
+        R1Sel = 0;
+        MDRload = 0;
+        R1R2Load = 0;
+        ALU1 = 0;
+        ALU2 = 3'b000;
+        ALUop = ALUop_add;
+        ALUOutWrite = 0;
+        RFWrite = 1;
+        RegIn = 0;
+        FlagWrite = 0;
 		  Stop = 0;
       end
       c3_ori: begin //control = 19'b0000010100000000000;
@@ -230,7 +234,7 @@ module FSM (
         R1R2Load = 1;
         ALU1 = 0;
         ALU2 = 3'b000;
-        ALUop = 3'b000;
+        ALUop = ALUop_add;
         ALUOutWrite = 0;
         RFWrite = 0;
         RegIn = 0;
@@ -248,7 +252,7 @@ module FSM (
         R1R2Load = 0;
         ALU1 = 1;
         ALU2 = 3'b011;
-        ALUop = 3'b010;
+        ALUop = ALUop_or;
         ALUOutWrite = 1;
         RFWrite = 0;
         RegIn = 0;
@@ -266,7 +270,7 @@ module FSM (
         R1R2Load = 0;
         ALU1 = 0;
         ALU2 = 3'b000;
-        ALUop = 3'b000;
+        ALUop = ALUop_add;
         ALUOutWrite = 0;
         RFWrite = 1;
         RegIn = 0;
@@ -284,7 +288,7 @@ module FSM (
         R1R2Load = 0;
         ALU1 = 0;
         ALU2 = 3'b000;
-        ALUop = 3'b000;
+        ALUop = ALUop_add;
         ALUOutWrite = 0;
         RFWrite = 0;
         RegIn = 0;
@@ -302,7 +306,7 @@ module FSM (
         R1R2Load = 0;
         ALU1 = 0;
         ALU2 = 3'b000;
-        ALUop = 3'b000;
+        ALUop = ALUop_add;
         ALUOutWrite = 1;
         RFWrite = 1;
         RegIn = 1;
@@ -320,7 +324,7 @@ module FSM (
         R1R2Load = 0;
         ALU1 = 0;
         ALU2 = 3'b000;
-        ALUop = 3'b000;
+        ALUop = ALUop_add;
         ALUOutWrite = 0;
         RFWrite = 0;
         RegIn = 0;
@@ -338,7 +342,7 @@ module FSM (
         R1R2Load = 0;
         ALU1 = 0;
         ALU2 = 3'b010;
-        ALUop = 3'b000;
+        ALUop = ALUop_add;
         ALUOutWrite = 0;
         RFWrite = 0;
         RegIn = 0;
@@ -356,7 +360,7 @@ module FSM (
         R1R2Load = 0;
         ALU1 = 0;
         ALU2 = 3'b010;
-        ALUop = 3'b000;
+        ALUop = ALUop_add;
         ALUOutWrite = 0;
         RFWrite = 0;
         RegIn = 0;
@@ -374,7 +378,7 @@ module FSM (
         R1R2Load = 0;
         ALU1 = 0;
         ALU2 = 3'b010;
-        ALUop = 3'b000;
+        ALUop = ALUop_add;
         ALUOutWrite = 0;
         RFWrite = 0;
         RegIn = 0;
@@ -392,7 +396,7 @@ module FSM (
         R1R2Load = 0;
         ALU1 = 0;
         ALU2 = 3'b000;
-        ALUop = 3'b000;
+        ALUop = ALUop_add;
         ALUOutWrite = 0;
         RFWrite = 0;
         RegIn = 0;
@@ -410,7 +414,7 @@ module FSM (
         R1R2Load = 0;
         ALU1 = 0;
         ALU2 = 3'b000;
-        ALUop = 3'b000;
+        ALUop = ALUop_add;
         ALUOutWrite = 0;
         RFWrite = 0;
         RegIn = 0;
