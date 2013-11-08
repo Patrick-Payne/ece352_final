@@ -17,12 +17,14 @@ module multicycle(
 
   /* Internal registers/wires. */
   wire clock, reset;
-  wire IR1Load, MDRLoad, MemRead, MemWrite, PC_sel, PCWrite, RegIn, Stop;
+  wire IR1Load, IR2Load, IR3Load, IR4Load;
+  wire MDRLoad, MemRead, MemWrite, PC_sel, PCWrite, RegIn, Stop;
   wire ALU1, ALUOutWrite, FlagWrite, R1R2Load, R1Sel, RFWrite;
   wire [7:0] R2wire, R1wire, RFout1wire, RFout2wire;
   wire [7:0] PC_in, PCwire;
   wire [7:0] ALU1wire, ALU2wire, ALUwire, ALUOut, MDRwire, MEMwire;
-  wire [7:0] IR1_in, IR1_out, SE4wire, ZE5wire, ZE3wire, RegWire;
+  wire [7:0] IR1_in, IR1_out, IR2_out, IR3_out, IR4_out;
+  wire [7:0] SE4wire, ZE5wire, ZE3wire, RegWire;
   wire [7:0] reg0, reg1, reg2, reg3;
   wire [7:0] HEX10_wire, HEX32_wire, HEX54_wire, HEX76_wire;
   wire [7:0] constant;
@@ -44,6 +46,11 @@ module multicycle(
      .RFWrite(RFWrite), .RegIn(RegIn), .FlagWrite(FlagWrite), .ALU2(ALU2),
      .ALUop(ALUOp));
 
+  /* For now, just assign values for the pipelined instruction regs. */
+  assign IR2Load = 1'b1;
+  assign IR3Load = 1'b1;
+  assign IR4Load = 1'b1;
+
   memory DataMem(
      .MemRead(MemRead), .wren(MemWrite), .clock(clock), .address(R2wire),
      .address_pc(PCwire), .data(R1wire), .q(MEMwire), .q_pc(IR1_in));
@@ -58,9 +65,23 @@ module multicycle(
      .regw(R1_in), .data1(RFout1wire), .data2(RFout2wire),
      .r0(reg0), .r1(reg1), .r2(reg2), .r3(reg3));
 
+  /* Implement the pipelined instruction registers. */
   register_8bit IR1_reg(
      .clock(clock), .aclr(reset), .enable(IR1Load),
      .data(IR1_in), .q(IR1_out));
+
+  register_8bit IR2_reg(
+     .clock(clock), .aclr(reset), .enable(IR2Load),
+     .data(IR1_out), .q(IR2_out));
+
+  register_8bit IR3_reg(
+     .clock(clock), .aclr(reset), .enable(IR3Load),
+     .data(IR2_out), .q(IR3_out));
+
+  register_8bit IR4_reg(
+     .clock(clock), .aclr(reset), .enable(IR4Load),
+     .data(IR3_out), .q(IR4_out));
+
 
   register_8bit MDR_reg(
      .clock(clock), .aclr(reset), .enable(MDRLoad),
@@ -142,15 +163,15 @@ module multicycle(
   // If switch 2 is on, display the performance counter on HEX1 and HEX0.
   // If both switches are on, display the pipelined PC registers.
   mux4to1_8bit HEX10_mux(
-     .data0x(reg3), .data1x(IR1_out), .data2x(performance_count[7:0]),
+     .data0x(reg3), .data1x(IR4_out), .data2x(performance_count[7:0]),
      .data3x(PCwire), .sel(SW[2:1]), .result(HEX10_wire));
 
   mux4to1_8bit HEX32_mux(
-     .data0x(reg2), .data1x(IR1_out), .data2x(performance_count[15:8]),
+     .data0x(reg2), .data1x(IR3_out), .data2x(performance_count[15:8]),
      .data3x(PCwire), .sel(SW[2:1]), .result(HEX32_wire));
 
   mux4to1_8bit HEX54_mux(
-     .data0x(reg1), .data1x(IR1_out), .data2x(reg1),
+     .data0x(reg1), .data1x(IR2_out), .data2x(reg1),
      .data3x(PCwire), .sel(SW[2:1]), .result(HEX54_wire));
 
   mux4to1_8bit HEX76_mux(

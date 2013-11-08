@@ -143,7 +143,6 @@ set_global_assignment -name VERILOG_FILE mux2to1_8bit.v
 set_global_assignment -name VERILOG_FILE mux2to1_2bit.v
 set_global_assignment -name VERILOG_FILE mux5to1_8bit.v
 set_global_assignment -name VERILOG_FILE multicycle.v
-set_global_assignment -name VERILOG_FILE DataMemory.v
 set_global_assignment -name VERILOG_FILE ALU.v
 set_global_assignment -name VERILOG_FILE RF.v
 set_global_assignment -name VERILOG_FILE extend.v
