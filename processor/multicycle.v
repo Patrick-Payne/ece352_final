@@ -137,27 +137,30 @@ module multicycle(
   end
 
   /* Select the values to display on the hex displays. */
+  // If switches are off, display the 4 registers.
+  // If switch 1 is on, display the pipelined instruction registers.
   // If switch 2 is on, display the performance counter on HEX1 and HEX0.
-  mux2to1_8bit HEX10_mux(
-     .data0x(reg3), .data1x(performance_count[7:0]),
-     .sel(SW[2]), .result(HEX10_wire));
+  // If both switches are on, display the pipelined PC registers.
+  mux4to1_8bit HEX10_mux(
+     .data0x(reg3), .data1x(IR_out), .data2x(performance_count[7:0]),
+     .data3x(PCwire), .sel(SW[2:1]), .result(HEX10_wire));
 
-  mux2to1_8bit HEX32_mux(
-     .data0x(reg2), .data1x(performance_count[15:8]),
-     .sel(SW[2]), .result(HEX32_wire));
+  mux4to1_8bit HEX32_mux(
+     .data0x(reg2), .data1x(IR_out), .data2x(performance_count[15:8]),
+     .data3x(PCwire), .sel(SW[2:1]), .result(HEX32_wire));
 
-  // If switch 0 is on, display the contents of the PC and IR.
-  mux2to1_8bit HEX54_mux(
-     .data0x(reg1), .data1x(IR_out),
-     .sel(SW[0]), .result(HEX54_wire));
+  mux4to1_8bit HEX54_mux(
+     .data0x(reg1), .data1x(IR_out), .data2x(reg1),
+     .data3x(PCwire), .sel(SW[2:1]), .result(HEX54_wire));
 
-  mux2to1_8bit HEX76_mux(
-     .data0x(reg0), .data1x(PCwire),
-     .sel(SW[0]), .result(HEX76_wire));
+  mux4to1_8bit HEX76_mux(
+     .data0x(reg0), .data1x(IR_out), .data2x(reg0),
+     .data3x(PCwire), .sel(SW[2:1]), .result(HEX76_wire));
 
   /* Output */
   HEXs HEX_display(
-     .in0(HEX76_wire), .in1(HEX54_wire), .in2(HEX32_wire), .in3(HEX10_wire),
+     .in0(HEX76_wire), .in1(HEX54_wire),
+     .in2(HEX32_wire), .in3(HEX10_wire),
      .out0(HEX0), .out1(HEX1), .out2(HEX2), .out3(HEX3),
      .out4(HEX4), .out5(HEX5), .out6(HEX6), .out7(HEX7));
 
