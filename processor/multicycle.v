@@ -17,12 +17,12 @@ module multicycle(
 
   /* Internal registers/wires. */
   wire clock, reset;
-  wire IRLoad, MDRLoad, MemRead, MemWrite, PC_sel, PCWrite, RegIn, Stop;
+  wire IR1Load, MDRLoad, MemRead, MemWrite, PC_sel, PCWrite, RegIn, Stop;
   wire ALU1, ALUOutWrite, FlagWrite, R1R2Load, R1Sel, RFWrite;
   wire [7:0] R2wire, R1wire, RFout1wire, RFout2wire;
   wire [7:0] PC_in, PCwire;
   wire [7:0] ALU1wire, ALU2wire, ALUwire, ALUOut, MDRwire, MEMwire;
-  wire [7:0] IR_in, IR_out, SE4wire, ZE5wire, ZE3wire, RegWire;
+  wire [7:0] IR1_in, IR1_out, SE4wire, ZE5wire, ZE3wire, RegWire;
   wire [7:0] reg0, reg1, reg2, reg3;
   wire [7:0] HEX10_wire, HEX32_wire, HEX54_wire, HEX76_wire;
   wire [7:0] constant;
@@ -37,16 +37,16 @@ module multicycle(
   assign reset = ~KEY[0]; // KEY is active high
 
   FSM  Control(
-     .reset(reset), .clock(clock), .N(N), .Z(Z), .instr(IR_out[3:0]),
+     .reset(reset), .clock(clock), .N(N), .Z(Z), .instr(IR1_out[3:0]),
      .PC_sel(PC_sel), .PCwrite(PCWrite), .MemRead(MemRead),
-     .MemWrite(MemWrite), .IRload(IRLoad), .R1Sel(R1Sel), .MDRload(MDRLoad),
+     .MemWrite(MemWrite), .IRload(IR1Load), .R1Sel(R1Sel), .MDRload(MDRLoad),
      .Stop(Stop), .R1R2Load(R1R2Load), .ALU1(ALU1), .ALUOutWrite(ALUOutWrite),
      .RFWrite(RFWrite), .RegIn(RegIn), .FlagWrite(FlagWrite), .ALU2(ALU2),
      .ALUop(ALUOp));
 
   memory DataMem(
      .MemRead(MemRead), .wren(MemWrite), .clock(clock), .address(R2wire),
-     .address_pc(PCwire), .data(R1wire), .q(MEMwire), .q_pc(IR_in));
+     .address_pc(PCwire), .data(R1wire), .q(MEMwire), .q_pc(IR1_in));
 
   ALU  ALU(
      .in1(ALU1wire), .in2(ALU2wire), .out(ALUwire),
@@ -54,13 +54,13 @@ module multicycle(
 
   RF  RF_block(
      .clock(clock), .reset(reset), .RFWrite(RFWrite),
-     .dataw(RegWire), .reg1(R1_in), .reg2(IR_out[5:4]),
+     .dataw(RegWire), .reg1(R1_in), .reg2(IR1_out[5:4]),
      .regw(R1_in), .data1(RFout1wire), .data2(RFout2wire),
      .r0(reg0), .r1(reg1), .r2(reg2), .r3(reg3));
 
-  register_8bit IR_reg(
-     .clock(clock), .aclr(reset), .enable(IRLoad),
-     .data(IR_in), .q(IR_out));
+  register_8bit IR1_reg(
+     .clock(clock), .aclr(reset), .enable(IR1Load),
+     .data(IR1_in), .q(IR1_out));
 
   register_8bit MDR_reg(
      .clock(clock), .aclr(reset), .enable(MDRLoad),
@@ -88,7 +88,7 @@ module multicycle(
      .sel(PC_sel), .result(PC_in));
 
   mux2to1_2bit R1Sel_mux(
-     .data0x(IR_out[7:6]), .data1x(constant[1:0]),
+     .data0x(IR1_out[7:6]), .data1x(constant[1:0]),
      .sel(R1Sel), .result(R1_in));
 
   mux2to1_8bit RegMux(
@@ -103,9 +103,9 @@ module multicycle(
      .data0x(R2wire), .data1x(constant), .data2x(SE4wire),
      .data3x(ZE5wire), .data4x(ZE3wire), .sel(ALU2), .result(ALU2wire));
 
-  sExtend SE4(.in(IR_out[7:4]), .out(SE4wire));
-  zExtend ZE3(.in(IR_out[5:3]), .out(ZE3wire));
-  zExtend ZE5(.in(IR_out[7:3]), .out(ZE5wire));
+  sExtend SE4(.in(IR1_out[7:4]), .out(SE4wire));
+  zExtend ZE3(.in(IR1_out[5:3]), .out(ZE3wire));
+  zExtend ZE5(.in(IR1_out[7:3]), .out(ZE5wire));
 
   // define parameter for the data size to be extended
   defparam SE4.n = 4;
@@ -142,19 +142,19 @@ module multicycle(
   // If switch 2 is on, display the performance counter on HEX1 and HEX0.
   // If both switches are on, display the pipelined PC registers.
   mux4to1_8bit HEX10_mux(
-     .data0x(reg3), .data1x(IR_out), .data2x(performance_count[7:0]),
+     .data0x(reg3), .data1x(IR1_out), .data2x(performance_count[7:0]),
      .data3x(PCwire), .sel(SW[2:1]), .result(HEX10_wire));
 
   mux4to1_8bit HEX32_mux(
-     .data0x(reg2), .data1x(IR_out), .data2x(performance_count[15:8]),
+     .data0x(reg2), .data1x(IR1_out), .data2x(performance_count[15:8]),
      .data3x(PCwire), .sel(SW[2:1]), .result(HEX32_wire));
 
   mux4to1_8bit HEX54_mux(
-     .data0x(reg1), .data1x(IR_out), .data2x(reg1),
+     .data0x(reg1), .data1x(IR1_out), .data2x(reg1),
      .data3x(PCwire), .sel(SW[2:1]), .result(HEX54_wire));
 
   mux4to1_8bit HEX76_mux(
-     .data0x(reg0), .data1x(IR_out), .data2x(reg0),
+     .data0x(reg0), .data1x(IR1_out), .data2x(reg0),
      .data3x(PCwire), .sel(SW[2:1]), .result(HEX76_wire));
 
   /* Output */
@@ -169,7 +169,7 @@ module multicycle(
   assign LEDR[16] = Stop;
   assign LEDR[15] = MemRead;
   assign LEDR[14] = MemWrite;
-  assign LEDR[13] = IRLoad;
+  assign LEDR[13] = IR1Load;
   assign LEDR[12] = R1Sel;
   assign LEDR[11] = MDRLoad;
   assign LEDR[10] = R1R2Load;
