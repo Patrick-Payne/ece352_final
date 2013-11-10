@@ -31,6 +31,7 @@ module multicycle(
   reg [15:0] performance_count;
   wire [2:0] ALUOp, ALU2;
   wire [1:0] R1_in;
+  wire [4:0] State;
   wire Nwire, Zwire;
   reg  N, Z;
 
@@ -44,7 +45,7 @@ module multicycle(
      .MemWrite(MemWrite), .IRload(IR1Load), .R1Sel(R1Sel), .MDRload(MDRLoad),
      .Stop(Stop), .R1R2Load(R1R2Load), .ALU1(ALU1), .ALUOutWrite(ALUOutWrite),
      .RFWrite(RFWrite), .RegIn(RegIn), .FlagWrite(FlagWrite), .ALU2(ALU2),
-     .ALUop(ALUOp));
+     .ALUop(ALUOp), .state(State));
 
   /* For now, just assign values for the pipelined instruction regs. */
   assign IR2Load = 1'b1;
@@ -61,8 +62,8 @@ module multicycle(
 
   RF  RF_block(
      .clock(clock), .reset(reset), .RFWrite(RFWrite),
-     .dataw(RegWire), .reg1(R1_in), .reg2(IR1_out[5:4]),
-     .regw(R1_in), .data1(RFout1wire), .data2(RFout2wire),
+     .dataw(RegWire), .reg1(R1_in), .reg2(IR2_out[5:4]),
+     .regw(IR4_out[7:6]), .data1(RFout1wire), .data2(RFout2wire),
      .r0(reg0), .r1(reg1), .r2(reg2), .r3(reg3));
 
   /* Implement the pipelined instruction registers. */
@@ -109,7 +110,7 @@ module multicycle(
      .sel(PC_sel), .result(PC_in));
 
   mux2to1_2bit R1Sel_mux(
-     .data0x(IR1_out[7:6]), .data1x(constant[1:0]),
+     .data0x(IR2_out[7:6]), .data1x(constant[1:0]),
      .sel(R1Sel), .result(R1_in));
 
   mux2to1_8bit RegMux(
@@ -124,9 +125,9 @@ module multicycle(
      .data0x(R2wire), .data1x(constant), .data2x(SE4wire),
      .data3x(ZE5wire), .data4x(ZE3wire), .sel(ALU2), .result(ALU2wire));
 
-  sExtend SE4(.in(IR1_out[7:4]), .out(SE4wire));
-  zExtend ZE3(.in(IR1_out[5:3]), .out(ZE3wire));
-  zExtend ZE5(.in(IR1_out[7:3]), .out(ZE5wire));
+  sExtend SE4(.in(IR2_out[7:4]), .out(SE4wire));
+  zExtend ZE3(.in(IR2_out[5:3]), .out(ZE3wire));
+  zExtend ZE5(.in(IR2_out[7:3]), .out(ZE5wire));
 
   // define parameter for the data size to be extended
   defparam SE4.n = 4;
@@ -200,7 +201,7 @@ module multicycle(
   assign LEDR[0] = RegIn;
   assign LEDR[8:6] = ALU2[2:0];
   assign LEDR[5:3] = ALUOp[2:0];
-  assign LEDG[6:2] = constant[7:3];
+  assign LEDG[6:2] = State;
   assign LEDG[7] = FlagWrite;
   assign LEDG[1] = N;
   assign LEDG[0] = Z;

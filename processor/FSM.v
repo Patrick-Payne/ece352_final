@@ -11,13 +11,13 @@
 module FSM (
     input reset, clock, N, Z,
     input [3:0] instr,
-    //output [3:0] state,
+    output reg [4:0] state,
     output reg PCwrite, PC_sel, MemRead, MemWrite, IRload, R1Sel, MDRload, 
     output reg R1R2Load, ALU1, ALUOutWrite, RFWrite, RegIn, FlagWrite, Stop,
     output reg [2:0] ALU2, ALUop);
 
   /* The 4 bit number representing the state of the control. */
-  reg [4:0] state;
+  //reg [4:0] state;
  
   /* state constants (note: asn = add/sub/nand, asnsh = add/sub/nand/shift) */
   parameter [4:0] reset_s = 0, c1 = 1, c2 = 2, c3_asn = 3, c4_asnsh = 4,
