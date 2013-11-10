@@ -41,16 +41,22 @@ module multicycle(
 
   FSM  Control(
      .reset(reset), .clock(clock), .N(N), .Z(Z), .instr(IR1_out[3:0]),
-     .PC_sel(PC_sel), .PCwrite(PCWrite), .MemRead(MemRead),
-     .MemWrite(MemWrite), .IRload(IR1Load), .R1Sel(R1Sel), .MDRload(MDRLoad),
-     .Stop(Stop), .R1R2Load(R1R2Load), .ALU1(ALU1), .ALUOutWrite(ALUOutWrite),
-     .RFWrite(RFWrite), .RegIn(RegIn), .FlagWrite(FlagWrite), .ALU2(ALU2),
+     .MemRead(MemRead), .MemWrite(MemWrite), .R1Sel(R1Sel), .MDRload(MDRLoad),
+     .R1R2Load(R1R2Load), .ALU1(ALU1), .ALUOutWrite(ALUOutWrite),
+     .FlagWrite(FlagWrite), .ALU2(ALU2),
      .ALUop(ALUOp), .state(State));
+
+  control_fetch fetch (
+      .branch(1'b0), .opcode(IR1_out[3:0]), .pc_write(PCWrite),
+      .pc_sel(PC_sel), .ir1_load(IR1Load));
+
+  control_wb  wb (
+    .opcode(IR4_out[3:0]), .rf_write(RFWrite), .ir4_load(IR4Load),
+    .reg_in(RegIn), .stop(Stop));
 
   /* For now, just assign values for the pipelined instruction regs. */
   assign IR2Load = 1'b1;
   assign IR3Load = 1'b1;
-  assign IR4Load = 1'b1;
 
   memory DataMem(
      .MemRead(MemRead), .wren(MemWrite), .clock(clock), .address(R2wire),
