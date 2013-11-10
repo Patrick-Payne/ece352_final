@@ -19,18 +19,15 @@ module control_fetch (
 	  i_store = 2, i_bpz = 13, i_bz = 5, i_bnz = 9, i_nop = 10, i_stop = 1;
 
   always @(*) begin
-    case (opcode)
-      i_stop: begin
-        pc_write = 0;
-        pc_sel = 0;
-        ir1_load = 0;
-      end
-
-      default: begin
-        pc_sel = branch;
-        pc_write = 1;
-        ir1_load = 1;
-      end
-    endcase
+    if (opcode == i_stop) begin
+      pc_write = 0;
+      pc_sel = 0;
+      ir1_load = 0;
+    end
+    else begin
+      pc_sel = branch;
+      pc_write = 1;
+      ir1_load = 1;
+    end
   end
 endmodule
