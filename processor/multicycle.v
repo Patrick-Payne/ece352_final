@@ -31,32 +31,38 @@ module multicycle(
   reg [15:0] performance_count;
   wire [2:0] ALUOp, ALU2;
   wire [1:0] R1_in;
-  wire [4:0] State;
+  wire en_fetch, en_read, en_exec, en_wb;
+  wire RegWSel;
+  wire [1:0] RegW_in;
   wire Nwire, Zwire;
   reg  N, Z;
 
   /* Input assigments */
   assign clock = KEY[1];
   assign reset = ~KEY[0]; // KEY is active high
+  assign ALU1 = 1'b1;
 
-  FSM  Control(
-     .reset(reset), .clock(clock), .N(N), .Z(Z), .instr(IR1_out[3:0]),
-     .MemRead(MemRead), .MemWrite(MemWrite), .R1Sel(R1Sel), .MDRload(MDRLoad),
-     .R1R2Load(R1R2Load), .ALU1(ALU1), .ALUOutWrite(ALUOutWrite),
-     .FlagWrite(FlagWrite), .ALU2(ALU2),
-     .ALUop(ALUOp), .state(State));
-
+  control_main main(
+    .clock(clock), .reset(reset),
+    .ir1(IR1_out), .ir2(IR2_out), .ir3(IR3_out), .ir4(IR4_out),
+    .ir1_load(IR1Load), .ir2_load(IR2Load), .ir3_load(IR3Load), .ir4_load(IR4Load),
+    .en_fetch(en_fetch), .en_read(en_read), .en_exec(en_exec), .en_wb(en_wb));
+  
   control_fetch fetch (
-      .branch(1'b0), .opcode(IR1_out[3:0]), .pc_write(PCWrite),
-      .pc_sel(PC_sel), .ir1_load(IR1Load));
+      .branch(1'b0), .en_fetch(en_fetch), .opcode(IR1_out[3:0]), .pc_write(PCWrite),
+      .pc_sel(PC_sel));
+      
+  control_read read (
+     .instr(IR2_out[3:0]), .en_read(en_read), .r1r2_load(R1R2Load), .r1_sel(R1Sel));
 
+  control_exec exec (
+     .instr(IR3_out[3:0]), .en_exec(en_exec), 
+     .mem_read(MemRead), .mem_write(MemWrite), .mdr_load(MDRLoad),
+     .flag_write(FlagWrite), .alu_2(ALU2), .alu_op(ALUOp), .alu_out_write(ALUOutWrite));
+      
   control_wb  wb (
-    .opcode(IR4_out[3:0]), .rf_write(RFWrite), .ir4_load(IR4Load),
+    .opcode(IR4_out[3:0]), .en_wb(en_wb), .rf_write(RFWrite), .regw_sel(RegWSel),
     .reg_in(RegIn), .stop(Stop));
-
-  /* For now, just assign values for the pipelined instruction regs. */
-  assign IR2Load = 1'b1;
-  assign IR3Load = 1'b1;
 
   memory DataMem(
      .MemRead(MemRead), .wren(MemWrite), .clock(clock), .address(R2wire),
@@ -69,7 +75,7 @@ module multicycle(
   RF  RF_block(
      .clock(clock), .reset(reset), .RFWrite(RFWrite),
      .dataw(RegWire), .reg1(R1_in), .reg2(IR2_out[5:4]),
-     .regw(IR4_out[7:6]), .data1(RFout1wire), .data2(RFout2wire),
+     .regw(RegW_in), .data1(RFout1wire), .data2(RFout2wire),
      .r0(reg0), .r1(reg1), .r2(reg2), .r3(reg3));
 
   /* Implement the pipelined instruction registers. */
@@ -118,6 +124,10 @@ module multicycle(
   mux2to1_2bit R1Sel_mux(
      .data0x(IR2_out[7:6]), .data1x(constant[1:0]),
      .sel(R1Sel), .result(R1_in));
+     
+  mux2to1_2bit RegWSel_mux(
+     .data0x(IR4_out[7:6]), .data1x(constant[1:0]),
+     .sel(RegWSel), .result(RegW_in));
 
   mux2to1_8bit RegMux(
      .data0x(ALUOut), .data1x(MDRwire),
@@ -131,9 +141,9 @@ module multicycle(
      .data0x(R2wire), .data1x(constant), .data2x(SE4wire),
      .data3x(ZE5wire), .data4x(ZE3wire), .sel(ALU2), .result(ALU2wire));
 
-  sExtend SE4(.in(IR2_out[7:4]), .out(SE4wire));
-  zExtend ZE3(.in(IR2_out[5:3]), .out(ZE3wire));
-  zExtend ZE5(.in(IR2_out[7:3]), .out(ZE5wire));
+  sExtend SE4(.in(IR3_out[7:4]), .out(SE4wire));
+  zExtend ZE3(.in(IR3_out[5:3]), .out(ZE3wire));
+  zExtend ZE5(.in(IR3_out[7:3]), .out(ZE5wire));
 
   // define parameter for the data size to be extended
   defparam SE4.n = 4;
@@ -178,11 +188,11 @@ module multicycle(
      .data3x(PCwire), .sel(SW[2:1]), .result(HEX32_wire));
 
   mux4to1_8bit HEX54_mux(
-     .data0x(reg1), .data1x(IR2_out), .data2x(reg1),
+     .data0x(reg1), .data1x(IR2_out), .data2x(ALU2wire),
      .data3x(PCwire), .sel(SW[2:1]), .result(HEX54_wire));
 
   mux4to1_8bit HEX76_mux(
-     .data0x(reg0), .data1x(IR1_out), .data2x(reg0),
+     .data0x(reg0), .data1x(IR1_out), .data2x(ALU1wire),
      .data3x(PCwire), .sel(SW[2:1]), .result(HEX76_wire));
 
   /* Output */
@@ -202,13 +212,18 @@ module multicycle(
   assign LEDR[11] = MDRLoad;
   assign LEDR[10] = R1R2Load;
   assign LEDR[9] = ALU1;
+  assign LEDR[8:6] = ALU2[2:0];
+  assign LEDR[5:3] = ALUOp[2:0];
   assign LEDR[2] = ALUOutWrite;
   assign LEDR[1] = RFWrite;
   assign LEDR[0] = RegIn;
-  assign LEDR[8:6] = ALU2[2:0];
-  assign LEDR[5:3] = ALUOp[2:0];
-  assign LEDG[6:2] = State;
+  
   assign LEDG[7] = FlagWrite;
+  assign LEDG[6] = 1'b0;
+  assign LEDG[5] = en_fetch;
+  assign LEDG[4] = en_read;
+  assign LEDG[3] = en_exec;
+  assign LEDG[2] = en_wb;
   assign LEDG[1] = N;
   assign LEDG[0] = Z;
 

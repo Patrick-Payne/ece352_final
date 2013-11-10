@@ -9,7 +9,8 @@
 
 module control_wb (
     input [3:0] opcode,
-    output reg rf_write, ir4_load, reg_in, stop);
+    input en_wb,
+    output reg rf_write, ir4_load, reg_in, regw_sel, stop);
 
   /* Define constants for the different possible opcodes. */
   parameter [2:0] i_shift = 3, i_ori = 7;
@@ -17,34 +18,53 @@ module control_wb (
 	  i_store = 2, i_bpz = 13, i_bz = 5, i_bnz = 9, i_nop = 10, i_stop = 1;
 
   always @(*) begin
-    if ((opcode[2:0] == i_shift) | (opcode[2:0] == i_ori)) begin
+    if (~en_wb) begin
+      rf_write = 0;
+      ir4_load = 0;
+      reg_in = 1;
+      regw_sel = 0;
+      stop = 0;
+    end
+    else if (opcode[2:0] == i_shift) begin
       rf_write = 1;
       ir4_load = 1;
-      reg_in = 1;
+      reg_in = 0;
+      regw_sel = 0;
+      stop = 0;
+    end
+    else if(opcode[2:0] == i_ori) begin
+      rf_write = 1;
+      ir4_load = 1;
+      reg_in = 0;
+      regw_sel = 1;
       stop = 0;
     end
     else if ((opcode == i_add)|(opcode == i_subtract)|(opcode == i_nand)) begin
       rf_write = 1;
       ir4_load = 1;
-      reg_in = 1;
+      reg_in = 0;
+      regw_sel = 0;
       stop = 0;
     end
     else if (opcode == i_load) begin
       rf_write = 1;
       ir4_load = 1;
-      reg_in = 0;
+      reg_in = 1;
+      regw_sel = 0;
       stop = 0;
     end
     else if (opcode == i_stop) begin
       rf_write = 0;
       ir4_load = 0;
-      reg_in = 0;
+      reg_in = 1;
+      regw_sel = 0;
       stop = 1;
     end
     else begin
       rf_write = 0;
       ir4_load = 1;
       reg_in = 0;
+      regw_sel = 0;
       stop = 0;
     end
   end

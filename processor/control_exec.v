@@ -1,6 +1,6 @@
 /******************************************************************************
  * File: control_exec.v
- * Author: ECE352 development team, Patrick Payne, Alex Papanicolaou
+ * Author: Alex Papanicolaou
  * Date Created: Original 2007, modifications November 2013
  * Purpose: Implements the control of the multicycle processor. See project
  *    documentation for details.
@@ -8,9 +8,10 @@
  
  module control_exec (
      input [3:0] instr,
+     input en_exec,
      output reg ir3_load, mem_read, mem_write, mdr_load,
-     output reg flag_write, stop,
-     output reg alu_2, alu_op, alu_out_write);
+     output reg flag_write, alu_out_write,
+     output reg [2:0] alu_2, alu_op);
      
   /* Define constants for the different possible opcodes. */
   parameter [2:0] i_shift = 3, i_ori = 7;
@@ -26,7 +27,17 @@
       ALU2_IMM5 = 3'b011, ALU2_IMM3 = 3'b100;
   
   always @(*) begin
-    if(instr[2:0] == i_shift) begin
+    if(~en_exec) begin
+      mem_read = 0;
+      mem_write = 0;
+      mdr_load = 0;
+      alu_2 = ALU2_R2;
+      alu_op = aluop_add;
+      alu_out_write = 0;
+      ir3_load = 0;
+      flag_write = 0;
+    end
+    else if(instr[2:0] == i_shift) begin
       mem_read = 0;
       mem_write = 0;
       mdr_load = 0;

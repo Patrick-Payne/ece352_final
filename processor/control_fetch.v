@@ -9,7 +9,7 @@
  *****************************************************************************/
 
 module control_fetch (
-    input branch,
+    input branch, en_fetch,
     input [3:0] opcode,
     output reg pc_write, pc_sel, ir1_load);
 
@@ -18,8 +18,8 @@ module control_fetch (
   parameter [3:0] i_add = 4, i_subtract = 6, i_nand = 8, i_load = 0,
 	  i_store = 2, i_bpz = 13, i_bz = 5, i_bnz = 9, i_nop = 10, i_stop = 1;
 
-  always @(*) begin
-    if (opcode == i_stop) begin
+  always @(*) begin 
+    if ((opcode == i_stop) | (~en_fetch)) begin
       pc_write = 0;
       pc_sel = 0;
       ir1_load = 0;
