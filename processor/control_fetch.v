@@ -11,23 +11,19 @@
 module control_fetch (
     input branch, en_fetch,
     input [3:0] opcode,
-    output reg pc_write, pc_sel, ir1_load);
-
-  /* Define constants for the different possible opcodes. */
-  parameter [2:0] i_shift = 3, i_ori = 7;
-  parameter [3:0] i_add = 4, i_subtract = 6, i_nand = 8, i_load = 0,
-	  i_store = 2, i_bpz = 13, i_bz = 5, i_bnz = 9, i_nop = 10, i_stop = 1;
-
+    output reg pc_sel, pc0); 
+  
+  
+  
   always @(*) begin 
-    if ((opcode == i_stop) | (~en_fetch)) begin
-      pc_write = 0;
+    if ((opcode == 4'b1) | (~en_fetch)) begin
+      pc0 = 0;
       pc_sel = 0;
-      ir1_load = 0;
-    end
+   end
     else begin
       pc_sel = branch;
-      pc_write = 1;
-      ir1_load = 1;
+      pc0 = 1;
     end
   end
+
 endmodule

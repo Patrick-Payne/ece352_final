@@ -14,7 +14,7 @@
   /* Define constants for the different possible opcodes. */
   parameter [2:0] i_shift = 3, i_ori = 7;
   parameter [3:0] i_add = 4, i_subtract = 6, i_nand = 8, i_load = 0,
-	  i_store = 2, i_nop = 10, i_stop = 1;  
+	  i_store = 2, i_nop = 10, i_stop = 1, i_bpz = 13, i_bz = 5, i_bnz = 9;  
     
   always @(*) begin
     if(~en_read) begin
@@ -24,7 +24,7 @@
     end
     else if(instr[2:0] == i_shift) begin
       r1_sel = 0;
-      r1r2_load = 0;
+      r1r2_load = 1;
       ir2_load = 1;
     end
     else if(instr[2:0] == i_ori) begin
@@ -42,7 +42,7 @@
       r1r2_load = 1;
       ir2_load = 1;
     end
-    else if(instr == i_nop) begin
+    else if(instr == i_nop | instr == i_bz | instr == i_bpz | instr == i_bnz) begin
       r1_sel = 0;
       r1r2_load = 0;
       ir2_load = 1;
