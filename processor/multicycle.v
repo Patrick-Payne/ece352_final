@@ -32,6 +32,7 @@ module multicycle(
   wire [2:0] ALUOp, ALU2;
   wire [1:0] R1_in, ALU1;
   wire en_fetch, en_read, en_exec, en_wb;
+  wire bypass_ALU1, bypass_ALU2;
   wire RegWSel;
   wire [1:0] RegW_in;
   wire Nwire, Zwire, branch;
@@ -44,7 +45,8 @@ module multicycle(
   control_main main(
     .clock(clock), .reset(reset), .N(N), .Z(Z),
     .ir1(IR1_out), .ir2(IR2_out), .ir3(IR3_out), .ir4(IR4_out), .branch(branch),
-    .ir1_load(S1Load), .ir2_load(S2Load), .ir3_load(S3Load), .ir4_load(S4Load),
+    .bypass_ALU1(bypass_ALU1), .bypass_ALU2(bypass_ALU2), .ir1_load(S1Load),
+    .ir2_load(S2Load), .ir3_load(S3Load), .ir4_load(S4Load),
     .en_fetch(en_fetch), .en_read(en_read), .en_exec(en_exec), .en_wb(en_wb));
   
   control_fetch fetch (
@@ -55,16 +57,17 @@ module multicycle(
      .instr(IR2_out[3:0]), .en_read(en_read), .r1r2_load(R1R2Load), .r1_sel(R1Sel));
 
   control_exec exec (
-     .instr(IR3_out[3:0]), .en_exec(en_exec), .alu1(ALU1),
-     .mem_read(MemRead), .mem_write(MemWrite), .mdr_load(MDRLoad),
-     .flag_write(FlagWrite), .alu_2(ALU2), .alu_op(ALUOp), .alu_out_write(ALUOutWrite));
+     .instr(IR3_out[3:0]), .en_exec(en_exec), .bypass_ALU1(bypass_ALU1),
+     .bypass_ALU2(bypass_ALU2), .alu1(ALU1), .mem_read(MemRead),
+     .mem_write(MemWrite), .mdr_load(MDRLoad), .flag_write(FlagWrite),
+     .alu_2(ALU2), .alu_op(ALUOp), .alu_out_write(ALUOutWrite));
       
   control_wb  wb (
     .opcode(IR4_out[3:0]), .en_wb(en_wb), .rf_write(RFWrite), .regw_sel(RegWSel),
     .reg_in(RegIn), .stop(Stop));
 
   memory DataMem(
-     .MemRead(MemRead), .wren(MemWrite), .clock(clock), .address(R2wire),
+     .MemRead(MemRead), .wren(MemWrite), .clock(clock), .address(ALU2wire),
      .address_pc(PC0wire), .data(R1wire), .q(MEMwire), .q_pc(IR1_in));
 
   ALU  ALU(
@@ -144,12 +147,12 @@ module multicycle(
      .data0x(ALUOut), .data1x(MDRwire),
      .sel(RegIn), .result(RegWire));
 
-  mux2to1_8bit ALU1_mux(
-     .data0x(PC3wire), .data1x(R1wire), 
-     .sel(ALU1[0]), .result(ALU1wire));
+  mux3to1_8bit ALU1_mux(
+     .data0x(PC3wire), .data1x(R1wire), .data2x(ALUOut),
+     .sel(ALU1), .result(ALU1wire));
 
   mux5to1_8bit ALU2_mux(
-     .data0x(R2wire), .data1x(constant), .data2x(SE4wire),
+     .data0x(R2wire), .data1x(ALUOut), .data2x(SE4wire),
      .data3x(ZE5wire), .data4x(ZE3wire), .sel(ALU2), .result(ALU2wire));
 
   sExtend SE4(.in(IR3_out[7:4]), .out(SE4wire));
@@ -229,8 +232,8 @@ module multicycle(
   assign LEDR[1] = RFWrite;
   assign LEDR[0] = RegIn;
   
-  assign LEDG[7] = FlagWrite;
-  assign LEDG[6] = 1'b0;
+  assign LEDG[7] = bypass_ALU1;
+  assign LEDG[6] = bypass_ALU2;
   assign LEDG[5] = en_fetch;
   assign LEDG[4] = en_read;
   assign LEDG[3] = en_exec;
