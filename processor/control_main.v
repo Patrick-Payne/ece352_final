@@ -19,76 +19,37 @@ module control_main (
 	  i_store = 2, i_bpz = 13, i_bz = 5, i_bnz = 9, i_nop = 10, i_stop = 1;
   
   reg [2:0] state;
-  parameter [2:0] state_reset = 0, state_1 = 1, state_2 = 2, state_3 = 3, state_4 = 4;
+  parameter [2:0] state_reset = 0, state_1 = 1, state_2 = 2, state_3 = 3,
+     state_4 = 4;
   
   /* Keep loading new IR values until you hit a stop instruction. */
   always @(*) begin
-    if (ir3[3:0] == i_bpz) begin
-      if(~N) begin
-        branch = 1;
-        ir1_load = 1;
-        ir2_load = 1;
-        ir3_load = 1;
-        ir4_load = 1;
-      end
-      else begin
-        branch = 0;
-        ir1_load = 1;
-        ir2_load = 1;
-        ir3_load = 1;
-        ir4_load = 1;
-      end
-    end
-    else if (ir3[3:0] == i_bnz) begin
-      if(~Z) begin
-        branch = 1;
-        ir1_load = 1;
-        ir2_load = 1;
-        ir3_load = 1;
-        ir4_load = 1;
-      end
-      else begin
-        branch = 0;
-        ir1_load = 1;
-        ir2_load = 1;
-        ir3_load = 1;
-        ir4_load = 1;
-      end
-    end
-    else if (ir3[3:0] == i_bz) begin
-      if(Z) begin
-        branch = 1;
-        ir1_load = 1;
-        ir2_load = 1;
-        ir3_load = 1;
-        ir4_load = 1;
-      end
-      else begin
-        branch = 0;
-        ir1_load = 1;
-        ir2_load = 1;
-        ir3_load = 1;
-        ir4_load = 1;
-      end
-    end
-    else begin
-      branch = 0;
-      ir1_load = (ir1[3:0] != i_stop);
-      ir2_load = (ir2[3:0] != i_stop);
-      ir3_load = (ir3[3:0] != i_stop);
-      ir4_load = (ir4[3:0] != i_stop);
-    end
+    ir1_load = (ir1[3:0] != i_stop);
+    ir2_load = (ir2[3:0] != i_stop);
+    ir3_load = (ir3[3:0] != i_stop);
+    ir4_load = (ir4[3:0] != i_stop);
+  end
+
+  
+  /* Determine whether we are taking a branch. */
+  always @(*) begin
+    case (ir3[3:0])
+      i_bpz: if(N) branch = 0; else branch = 1;
+      i_bnz: if(Z) branch = 0; else branch = 1;
+      i_bz: if(Z) branch = 1; else branch = 0;
+      default: branch = 0;
+    endcase
   end
   
-  /* Determine whether we have a branch. If we do, determine if we should take it. */
   
-  
+  /* Determine next state. */
   always @(posedge clock, posedge reset) begin
     if(reset) begin
       state = state_reset;
     end
     else begin
       if (branch) begin
+        // Cannot be in above since branch is not in the sensitivity list.
         state = state_reset;
       end
       else begin
@@ -102,9 +63,9 @@ module control_main (
         endcase
       end
     end
-    
   end
   
+  /* Produce control outputs. */
   always @(*) begin
     case(state)
       state_reset: begin
