@@ -11,8 +11,7 @@ module control_main (
     input clock, reset, N, Z,
     input [7:0] ir1, ir2, ir3, ir4,
     output reg ir1_load, ir2_load, ir3_load, ir4_load, branch,
-    output reg en_fetch, en_read, en_exec, en_wb,
-    output reg bypass_R1, bypass_R2);
+    output reg en_fetch, en_read, en_exec, en_wb);
     
   /* Define constants for the different possible opcodes. */
   parameter [2:0] i_shift = 3, i_ori = 7;
@@ -22,7 +21,6 @@ module control_main (
   reg [2:0] state;
   parameter [2:0] state_reset = 0, state_1 = 1, state_2 = 2, state_3 = 3,
      state_4 = 4;
-     
   
   /* Keep loading new IR values until you hit a stop instruction. */
   always @(*) begin
@@ -43,61 +41,6 @@ module control_main (
     endcase
   end
   
-  /* Bypass fix to data hazard */
-  always @(*) begin
-    if(ir4[3:0] == i_add | ir4[3:0] == i_subtract | ir4[3:0] == i_nand) begin
-      if(ir2[3:0] == i_add | ir2[3:0] == i_subtract | ir2[3:0] == i_nand) begin
-        if(ir4[7:6] == ir2[5:4]) begin
-          if(ir2[7:6] == ir2[5:4]) begin
-            bypass_R1 = 1;
-            bypass_R2 = 1;
-          end
-          else begin
-            bypass_R1 = 0;
-            bypass_R2 = 1;
-          end
-        end
-        else begin
-          bypass_R1 = 0;
-          bypass_R2 = 0;
-        end
-      end
-      else if(ir4[7:6] == 2'b01 && ir2[2:0] == i_ori) begin
-        bypass_R1 = 1;
-        bypass_R2 = 0;
-      end
-    end
-    else if(ir4[2:0] == i_ori) begin
-      if(ir2[3:0] == i_add | ir2[3:0] == i_subtract | ir2[3:0] == i_nand) begin
-        if(ir2[5:4] == 2'b01) begin
-          if(ir2[5:4] == ir2[7:6]) begin
-            bypass_R1 = 1;
-            bypass_R2 = 1;
-          end
-          else begin
-            bypass_R1 = 0;
-            bypass_R2 = 1;
-          end
-        end
-        else begin
-          bypass_R1 = 0;
-          bypass_R2 = 0;
-        end
-      end
-    end
-    else if(ir4[2:0] == i_shift) begin
-      if(ir4[7:6] == ir2[5:4]) begin
-        bypass_R2 = 1; 
-      end
-      else begin
-        bypass_R2 = 0;
-      end
-    end
-    else begin
-      bypass_R1 = 0;
-      bypass_R2 = 0;
-    end
-  end
   
   /* Determine next state. */
   always @(posedge clock, posedge reset) begin
