@@ -12,7 +12,8 @@
      output reg ir3_load, mem_read, mem_write, mdr_load,
      output reg flag_write, alu_out_write,
      output reg [1:0] alu1,
-     output reg [2:0] alu_2, alu_op);
+     output reg [2:0] alu_2, alu_op,
+     output reg reg_in);
      
   /* Define constants for the different possible opcodes. */
   parameter [2:0] i_shift = 3, i_ori = 7;
@@ -41,6 +42,7 @@
       ir3_load = 0;
       flag_write = 0;
       alu1 = ALU1_R1;
+      reg_in = 0;
     end
     else if(instr[2:0] == i_shift) begin
       mem_read = 0;
@@ -52,6 +54,7 @@
       ir3_load = 1;
       flag_write = 1;
       if (bypass_ALU1) alu1 = ALU1_ALUOUT; else alu1 = ALU1_R1;
+      reg_in = 0;
     end
     else if(instr[2:0] == i_ori) begin
       mem_read = 0;
@@ -63,6 +66,7 @@
       ir3_load = 1;
       flag_write = 1;
       if (bypass_ALU1) alu1 = ALU1_ALUOUT; else alu1 = ALU1_R1;
+      reg_in = 0;
     end
     else if(instr == i_add) begin
       mem_read = 0;
@@ -74,6 +78,7 @@
       ir3_load = 1;
       flag_write = 1;
       if (bypass_ALU1) alu1 = ALU1_ALUOUT; else alu1 = ALU1_R1;
+      reg_in = 0;
     end
     else if(instr == i_subtract) begin
       mem_read = 0;
@@ -85,6 +90,7 @@
       ir3_load = 1;
       flag_write = 1;
       if (bypass_ALU1) alu1 = ALU1_ALUOUT; else alu1 = ALU1_R1;
+      reg_in = 0;
     end
     else if(instr == i_nand) begin
       mem_read = 0;
@@ -96,6 +102,7 @@
       ir3_load = 1;
       flag_write = 1;
       if (bypass_ALU1) alu1 = ALU1_ALUOUT; else alu1 = ALU1_R1;
+      reg_in = 0;
     end
     else if(instr == i_load) begin
       mem_read = 1;
@@ -103,10 +110,11 @@
       mdr_load = 1;
       if (bypass_ALU2) alu_2 = ALU2_ALUOUT; else alu_2 = ALU2_R2;
       alu_op = aluop_or;
-      alu_out_write = 0;
+      alu_out_write = 1;
       ir3_load = 1;
       flag_write = 0;
       if (bypass_ALU1) alu1 = ALU1_ALUOUT; else alu1 = ALU1_R1;
+      reg_in = 1;
     end
     else if(instr == i_store) begin
       mem_read = 0;
@@ -118,6 +126,7 @@
       ir3_load = 1;
       flag_write = 0;
       if (bypass_ALU1) alu1 = ALU1_ALUOUT; else alu1 = ALU1_R1;
+      reg_in = 0;
     end
     else if(instr == i_nop | instr == i_bz | instr == i_bpz | instr == i_bnz) begin
       mem_read = 0;
@@ -129,6 +138,7 @@
       ir3_load = 1;
       flag_write = 0;
       alu1 = ALU1_PC3; // Use PC3out to calculate branch target.
+      reg_in = 0;
     end
     else if(instr == i_stop) begin
       mem_read = 0;
@@ -140,6 +150,7 @@
       ir3_load = 0;
       flag_write = 0;
       alu1 = ALU1_R1;
+      reg_in = 0;
     end
     else begin
       mem_read = 0;
@@ -151,6 +162,7 @@
       ir3_load = 1;
       flag_write = 0;
       alu1 = ALU1_R1;
+      reg_in = 0;
     end
   end
 endmodule
