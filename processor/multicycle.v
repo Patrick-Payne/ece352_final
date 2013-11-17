@@ -34,6 +34,8 @@ module multicycle(
   wire en_fetch, en_read, en_exec, en_wb;
   wire RegWSel;
   wire [1:0] RegW_in;
+  wire R1_mux_to_R1, R2_mux_to_R2;
+  wire bypass_R1, bypass_R2;
   wire Nwire, Zwire, branch;
   reg  N, Z;
 
@@ -45,7 +47,8 @@ module multicycle(
     .clock(clock), .reset(reset), .N(N), .Z(Z),
     .ir1(IR1_out), .ir2(IR2_out), .ir3(IR3_out), .ir4(IR4_out), .branch(branch),
     .ir1_load(S1Load), .ir2_load(S2Load), .ir3_load(S3Load), .ir4_load(S4Load),
-    .en_fetch(en_fetch), .en_read(en_read), .en_exec(en_exec), .en_wb(en_wb));
+    .en_fetch(en_fetch), .en_read(en_read), .en_exec(en_exec), .en_wb(en_wb),
+    .bypass_R1(bypass_R1), .bypass_R2(bypass_R2));
   
   control_fetch fetch (
       .branch(branch), .en_fetch(en_fetch), .opcode(IR1_out[3:0]),
@@ -117,11 +120,11 @@ module multicycle(
 
   register_8bit R1(
      .clock(clock), .aclr(reset), .enable(R1R2Load),
-     .data(RFout1wire), .q(R1wire));
+     .data(R1_mux_to_R1), .q(R1wire));
 
   register_8bit R2(
      .clock(clock), .aclr(reset), .enable(R1R2Load),
-     .data(RFout2wire), .q(R2wire));
+     .data(R2_mux_to_R2), .q(R2wire));
 
   register_8bit ALUOut_reg(
      .clock(clock), .aclr(reset), .enable(ALUOutWrite),
@@ -151,6 +154,16 @@ module multicycle(
   mux5to1_8bit ALU2_mux(
      .data0x(R2wire), .data1x(constant), .data2x(SE4wire),
      .data3x(ZE5wire), .data4x(ZE3wire), .sel(ALU2), .result(ALU2wire));
+  
+  //bypass data hazard 1
+  mux2to1_8bit R1_mux(
+     .data0x(RFout1wire), .data1x(ALUOut), 
+     .sel(bypass_R1), .result(R1_mux_to_R1));
+  
+  //bypass data hazard 1
+  mux2to1_8bit R2_mux(
+     .data0x(RFout2wire), .data1x(ALUOut), 
+     .sel(bypass_R2), .result(R2_mux_to_R2));
 
   sExtend SE4(.in(IR3_out[7:4]), .out(SE4wire));
   zExtend ZE3(.in(IR3_out[5:3]), .out(ZE3wire));
